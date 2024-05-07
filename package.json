@@ -17,7 +17,8 @@
     "express": "^4.19.2",
     "morgan": "~1.9.1",
     "prisma": "^3.14.0",
-    "sanitize-html": "^2.7.0"
+    "sanitize-html": "^2.7.0",
+    "yarn": "^1.22.22"
   },
   "devDependencies": {
     "nodemon": "^2.0.16"
