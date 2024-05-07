@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="/stylesheets/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.0.0/mdb.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <style>
     .progressMessage {
       font-family: monospace;
@@ -45,6 +46,28 @@
       </div>
     </div>
   </section>
+  
+  <section style="background-color:rgb(4 0 255 / 6%);">
+    <div class="container-lg p-5">
+      <div class="row d-flex justify-content-center align-items-center">
+        <div class="col col-xl-10">
+          <div class="card">
+            <div class="card-body p-5 flex-colx">
+			  <form id="uploadForm" action="/api/uploadFolder" method="POST" enctype="multipart/form-data">
+		    	  <input type="file" name="folderPath" id="folderPath" webkitdirectory directory multiple>
+		    	  <button type="submit">Upload Folder</button>
+		  	  </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <section>
+	  
+  </section>
+
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.0.0/mdb.min.js"></script>
   <script src="../js/client.js"></script>
@@ -64,7 +87,7 @@
 
       document.getElementById('progressMessage').innerHTML = '<span class="step">Starting key signature detection...</span><br>'; // Display progress message
 
-      fetch('http://localhost:3000/api/uploadFile', {
+      fetch('http://68.237.4.248:3000/api/uploadFile', {
         method: 'POST',
         body: formData
       })
@@ -76,7 +99,7 @@
       })
       .then(data => {
         console.log('Upload success:', data.result);
-        document.getElementById('progressMessage').innerHTML += '<span class="step">Uploaded succesfuly...</span> <br>'; // Display progress message
+        document.getElementById('progressMessage').innerHTML += '<span class="step<em></em>">Uploaded succesfuly...</span> <br>'; // Display progress message
         document.getElementById('progressMessage').innerHTML += '<span class="step">Preparing audio data...</span><br>'; // Display progress message
         fetchKeys();  
       })
@@ -85,13 +108,63 @@
         document.getElementById('progressMessage').innerHTML = '<span class="error">Upload failed. Please try again.</span>'; // Display error message
       });
     }
+	
+	  
+		  
+  // Get the form element
+  const form = document.getElementById('uploadForm');
 
-    function fetchKeys() {
+  // Add a submit event listener to the form
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault(); // Prevent the default form submission
+
+	// Get the selected folder path
+	const folderPath = document.getElementById('folderPath').files;
+
+	// Create a FormData object to send data in multipart/form-data format
+	const formData = new FormData();
+
+	// Iterate over each file in the selected folder
+	for (let i = 0; i < folderPath.length; i++) {
+	  // Append each file to the FormData object with the same key
+	  formData.append('audioFiles', folderPath[i]);
+	}
+    
+    // Log the FormData object to the console
+    console.log($(formData));
+	
+//	uploadLocally();
+	
+
+    // Send the POST request using fetch
+    try {
+      const response = await fetch('http://68.237.4.248:3000/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      // Check if the request was successful
+      if (!response.ok) {
+        throw new Error('Failed to upload folder');
+      }
+
+      // Parse the JSON response
+      const data = await response.json();
+      console.log(data); // Do something with the response data
+    } catch (error) {
+      console.error(error);
+    }
+	
+
+
+  });
+  
+  function fetchKeys() {
       const folderPath = "./uploads";
       document.getElementById('progressMessage').innerHTML += '<span class="success">Audio data prepared successfully.</span><br>'; // Display progress message
       document.getElementById('progressMessage').innerHTML += '<span class="step">Running key signature detection...</span><br>'; // Display progress message
 
-      fetch(`http://localhost:3000/api/myFunction?folderPath=${encodeURIComponent(folderPath)}`)
+      fetch(`http://68.237.4.248:3000/api/myFunction?folderPath=${encodeURIComponent(folderPath)}`)
           .then(response => {
               if (!response.ok) {
                   throw new Error('Network response was not ok');
@@ -110,6 +183,11 @@
 
               // Assuming data is an array of arrays with [path, key] structure
               data.forEach(innerArray => {
+                  if (!Array.isArray(innerArray)) {
+                      console.error('Inner array is not iterable:', innerArray);
+                      return; // Exit early if 'innerArray' is not an array
+                  }
+
                   const [path, key] = innerArray; // Destructuring assignment to extract path and key
                   document.getElementById('progressMessage').innerHTML += `<span class="success">Key signature detected.</span><br><span class="info">Key signature:</span> ${key}<br>`; // Display progress message
               });
@@ -120,7 +198,9 @@
               console.error('Failed to fetch key signatures:', error);
               document.getElementById('progressMessage').innerHTML = '<span class="error">Failed to fetch key signatures. Please try again.</span>'; // Display error message
           });
-    }
+  }
+  
+	
   </script>
 </body>
 </html>
