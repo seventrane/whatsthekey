@@ -11,3 +11,13 @@ a {
   max-width: 600px;
   margin: auto;
 }
+
+.upload_btn {
+	margin-top: 2%;
+}
+
+.flex-colx {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
