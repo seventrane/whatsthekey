@@ -19,8 +19,8 @@ app.set('port', port);
  * SSL certificate and private key configuration.
  */
 
-const privateKey = fs.readFileSync('server.key'); // Replace 'path/to/private-key.key' with the actual path to your private key file
-const certificate = fs.readFileSync('server.cert'); // Replace 'path/to/certificate.cert' with the actual path to your certificate file
+const privateKey = fs.readFileSync('localhost.key'); // Replace 'path/to/private-key.key' with the actual path to your private key file
+const certificate = fs.readFileSync('localhost.crt'); // Replace 'path/to/certificate.cert' with the actual path to your certificate file
 const sslOptions = { key: privateKey, cert: certificate };
 
 /**
