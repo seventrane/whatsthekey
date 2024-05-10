@@ -5,7 +5,8 @@ require('dotenv').config();
  */
 
 const app = require('./app');
-const http = require('http');
+const https = require('https'); // Import the 'https' module
+const fs = require('fs'); // Import the 'fs' module to read files
 
 /**
  * Get port from environment and store in Express.
@@ -15,10 +16,18 @@ const port = normalizePort(process.env.PORT || '3001');
 app.set('port', port);
 
 /**
- * Create HTTP server.
+ * SSL certificate and private key configuration.
  */
 
-const server = http.createServer(app);
+const privateKey = fs.readFileSync('server.key'); // Replace 'path/to/private-key.key' with the actual path to your private key file
+const certificate = fs.readFileSync('server.cert'); // Replace 'path/to/certificate.cert' with the actual path to your certificate file
+const sslOptions = { key: privateKey, cert: certificate };
+
+/**
+ * Create HTTPS server.
+ */
+
+const server = https.createServer(sslOptions, app); // Create HTTPS server with SSL options
 
 /**
  * Listen on provided port, on all network interfaces.

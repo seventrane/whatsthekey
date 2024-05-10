@@ -87,17 +87,19 @@
 
       document.getElementById('progressMessage').innerHTML = '<span class="step">Starting key signature detection...</span><br>'; // Display progress message
 
-      fetch('http://68.237.4.248:3000/api/uploadFile', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to upload file');
-        }
-        return response.json();
-      })
-      .then(data => {
+	  fetch('https://68.237.4.248:3000/api/uploadFile', {
+	    method: 'POST',
+	    body: formData,
+	    timeout: 60000 // Set a longer timeout (in milliseconds)
+	  }).catch(error => {
+  console.error('Upload failed:', error.message); // Log the error message
+  document.getElementById('progressMessage').innerHTML = '<span class="error">Upload failed. Please try again.</span>'; // Display error message
+}).then(response => {
+  if (!response || !response.ok) {
+    throw new Error('Failed to upload file');
+  }
+  return response.json();
+}).then(data => {
         console.log('Upload success:', data.result);
         document.getElementById('progressMessage').innerHTML += '<span class="step<em></em>">Uploaded succesfuly...</span> <br>'; // Display progress message
         document.getElementById('progressMessage').innerHTML += '<span class="step">Preparing audio data...</span><br>'; // Display progress message
@@ -138,7 +140,7 @@
 
     // Send the POST request using fetch
     try {
-      const response = await fetch('http://68.237.4.248:3000/api/upload', {
+      const response = await fetch('https://68.237.4.248:3000/api/upload', {
         method: 'POST',
         body: formData
       });
@@ -164,7 +166,7 @@
       document.getElementById('progressMessage').innerHTML += '<span class="success">Audio data prepared successfully.</span><br>'; // Display progress message
       document.getElementById('progressMessage').innerHTML += '<span class="step">Running key signature detection...</span><br>'; // Display progress message
 
-      fetch(`http://68.237.4.248:3000/api/myFunction?folderPath=${encodeURIComponent(folderPath)}`)
+      fetch(`https://68.237.4.248:3000/api/myFunction?folderPath=${encodeURIComponent(folderPath)}`)
           .then(response => {
               if (!response.ok) {
                   throw new Error('Network response was not ok');
