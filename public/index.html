@@ -65,7 +65,8 @@
   </section>
   
   <section>
-	  
+	  <input type="file" id="filePicker" accept="audio/*">
+	      <div id="audioPlayer"></div>
   </section>
 
 
@@ -74,22 +75,8 @@
 
   <script>
   	  const folderPath = "./uploads";
-  	        const urlIP= "173.68.138.70";
+  	        const urlIP= "98.113.67.183";
   	        const urlPort = "3000";
-
-			
-			// Define a fake https object for client-side use
-			const https = {
-			  Agent: class {
-			    constructor(options) {
-			      this.rejectUnauthorized = options.rejectUnauthorized !== undefined ? options.rejectUnauthorized : true;
-			    }
-			    // Define a default checkServerIdentity method
-			    static defaultCheckServerIdentity(host, cert) {
-			      return require('tls').checkServerIdentity(host, cert);
-			    }
-			  }
-			};
 
 			async function uploadAudio() {
 			  const fileInput = document.getElementById('audioFileInput');
@@ -105,34 +92,17 @@
 
 			  document.getElementById('progressMessage').innerHTML = '<span class="step">Starting key signature detection...</span><br>'; // Display progress message
 
-			  // Custom agent to handle certificate validation
-			  const customAgent = new https.Agent({
-			    rejectUnauthorized: true, // Set to true to reject all untrusted certificates by default
-			    checkServerIdentity: function (host, cert) {
-			      // Check if the certificate is self-signed
-			      const isSelfSigned = cert.subject.CN === cert.issuer.CN;
-
-			      if (isSelfSigned) {
-			        // If the certificate is self-signed, allow it
-			        console.log('Self-signed certificate detected. Skipping validation.');
-			        return undefined; // Return undefined to bypass validation
-			      } else {
-			        // If the certificate is not self-signed, perform default validation
-			        return https.Agent.defaultCheckServerIdentity(host, cert);
-			      }
-			    }
-			  });
+		
 
 			  // Modify fetch request options to use custom agent
 			  const requestOptions = {
 			    method: 'POST',
-			    body: formData,
-			    agent: customAgent // Use the custom agent for this request
+			    body: formData
 			  };
 
 			  console.log('Sending request:', requestOptions);
 
-			  fetch(`https://${encodeURIComponent(urlIP)}:${encodeURIComponent(urlPort)}/api/uploadFile`, requestOptions)
+			  fetch(`http://${encodeURIComponent(urlIP)}:${encodeURIComponent(urlPort)}/api/uploadFile`, requestOptions)
 			    .then(response => {
 			      console.log('Response received:', response);
 			      if (!response.ok) {
@@ -162,93 +132,177 @@
 
   // Add a submit event listener to the form
   form.addEventListener('submit', async (event) => {
-    event.preventDefault(); // Prevent the default form submission
+      event.preventDefault(); // Prevent the default form submission
 
-	// Get the selected folder path
-	const folderPath = document.getElementById('folderPath').files;
+      // Get the selected folder path
+      const folderPath = document.getElementById('folderPath').files;
 
-	// Create a FormData object to send data in multipart/form-data format
-	const formData = new FormData();
+      // Create a FormData object to send data in multipart/form-data format
+      const formData = new FormData();
 
-	// Iterate over each file in the selected folder
-	for (let i = 0; i < folderPath.length; i++) {
-	  // Append each file to the FormData object with the same key
-	  formData.append('audioFiles', folderPath[i]);
-	}
-    
-    // Log the FormData object to the console
-    console.log($(formData));
-	
-//	uploadLocally();
-	
-
-    // Send the POST request using fetch
-    try {
-      const response = await fetch(`https://${encodeURIComponent(urlIP)}:${encodeURIComponent(urlPort)}/api/upload`, {
-        method: 'POST',
-        body: formData
-      });
-
-      // Check if the request was successful
-      if (!response.ok) {
-        throw new Error('Failed to upload folder');
+      // Iterate over each file in the selected folder
+      for (let i = 0; i < folderPath.length; i++) {
+          // Append each file to the FormData object with the same key
+          formData.append('audioFiles', folderPath[i]);
       }
 
-      // Parse the JSON response
-      const data = await response.json();
-      console.log(data); // Do something with the response data
-    } catch (error) {
-      console.error(error);
-    }
-	
+      // Log the FormData object to the console
+      console.log($(formData));
 
+      // Display progress message
+      document.getElementById('progressMessage').innerHTML = '<span class="step">Starting key signature detection...</span><br>';
 
+      // Send the POST request using fetch
+      try {
+          const response = await fetch(`http://${encodeURIComponent(urlIP)}:${encodeURIComponent(urlPort)}/api/upload`, {
+              method: 'POST',
+              body: formData
+          });
+
+          // Check if the request was successful
+          if (!response.ok) {
+              throw new Error('Failed to upload folder');
+          }
+
+          // Parse the JSON response
+          const data = await response.json();
+          console.log(data); // Do something with the response data
+
+          // Display progress messages based on the response data
+          data.results.forEach(result => {
+              if (Array.isArray(result) && result.length >= 2) {
+				  result.forEach(inResult => {
+	                  const filePath = inResult[0];
+	                  const key = inResult[1];
+	                  document.getElementById('progressMessage').innerHTML += `<span class="success">Key signature detected for ${filePath}:</span> ${key}<br>`;
+	              });
+				  }
+				  
+                 
+          });
+		  
+		  // Example usage:
+		  const startIndex = 31; // Starting index for data-song
+
+		  const html = generateSongListHTML(data.results, startIndex);
+		  console.log(html);
+
+          // Display success message
+          document.getElementById('progressMessage').innerHTML += '<span class="success">Folder uploaded successfully.</span><br>';
+      } catch (error) {
+          console.error(error);
+          // Display error message
+          document.getElementById('progressMessage').innerHTML += `<span class="error">Error: ${error.message}</span><br>`;
+      }
   });
   
   function fetchKeys() {
       const folderPath = "./uploads";
-      const urlIP= "173.68.138.70";
+      const urlIP= "98.113.65.76";
       const urlPort = "3000";
 	  
       document.getElementById('progressMessage').innerHTML += '<span class="success">Audio data prepared successfully.</span><br>'; // Display progress message
       document.getElementById('progressMessage').innerHTML += '<span class="step">Running key signature detection...</span><br>'; // Display progress message
 
-      fetch(`https://${encodeURIComponent(urlIP)}:${encodeURIComponent(urlPort)}/api/myFunction?folderPath=${encodeURIComponent(folderPath)}`)
+      fetch(`http://${encodeURIComponent(urlIP)}:${encodeURIComponent(urlPort)}/api/myFunction?folderPath=${encodeURIComponent(folderPath)}`)
           .then(response => {
               if (!response.ok) {
                   throw new Error('Network response was not ok');
               }
               return response.json();
           })
-          .then(response => {
-              // Check if 'result' property exists and is an array
-              if (!response.result || !Array.isArray(response.result)) {
-                  console.error('Result is not an array:', response.result);
-                  return; // Exit early if 'result' is not an array
-              }
+		  .then(response => {
+		      // Check if 'result' property exists and is an array
+		      if (!response.result || !Array.isArray(response.result)) {
+		          console.error('Result is not an array:', response.result);
+		          return; // Exit early if 'result' is not an array
+		      }
 
-              // Access the 'result' array
-              const data = response.result;
+		      // Access the 'result' array
+		      const data = response.result;
+			  	
+		      // Assuming data is an array of arrays with [path, key] structure
+		      data.forEach(innerArray => {
+		          if (!Array.isArray(innerArray)) {
+		              console.error('Inner array is not iterable:', innerArray);
+		              return; // Exit early if 'innerArray' is not an array
+		          }
 
-              // Assuming data is an array of arrays with [path, key] structure
-              data.forEach(innerArray => {
-                  if (!Array.isArray(innerArray)) {
-                      console.error('Inner array is not iterable:', innerArray);
-                      return; // Exit early if 'innerArray' is not an array
-                  }
+		          const [path, key] = innerArray; // Destructuring assignment to extract path and key
+		          document.getElementById('progressMessage').innerHTML += `<span class="success">Key signature detected.</span><br><span class="info">Key signature:</span> ${key}<br>`; // Display progress message
+		      });
 
-                  const [path, key] = innerArray; // Destructuring assignment to extract path and key
-                  document.getElementById('progressMessage').innerHTML += `<span class="success">Key signature detected.</span><br><span class="info">Key signature:</span> ${key}<br>`; // Display progress message
-              });
-
-              document.getElementById('progressMessage').innerHTML += '<span class="success">Key signatures fetched successfully.</span>'; // Display success message
-          })
+		      document.getElementById('progressMessage').innerHTML += '<span class="success">Key signatures fetched successfully.</span>'; // Display success message
+		  })
           .catch(error => {
               console.error('Failed to fetch key signatures:', error);
               document.getElementById('progressMessage').innerHTML = '<span class="error">Failed to fetch key signatures. Please try again.</span>'; // Display error message
           });
   }
   
+  
+  function generateSongListHTML(results, startIndex) {
+    let songIndex = startIndex;
+
+    return results.map(result => {
+      return result.map(song => {
+        const [filePath, key] = song;
+        const fileName = filePath.split('/').pop().split('.')[0];
+        const [note, quality] = key.split(' ');
+
+		songIndex++;
+		
+        return `
+          <li>
+            <div class="song" data-song="${songIndex}" data-note="${note}" data-quality="${quality}">
+              ${fileName}
+              <i class="fa fa-solid fa-volume-up hide"></i>
+            </div>
+            <audio data-sound="${songIndex}" src="${filePath}"></audio>
+          </li>
+        `;
+      }).join('');
+    }).join('');
+  }
+
+  // JavaScript
+  const filePicker = document.getElementById('filePicker');
+  const audioPlayer = document.getElementById('audioPlayer');
+
+  filePicker.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Use FileReader to read the file content as an ArrayBuffer
+      const fileContents = await readFileAsArrayBuffer(file);
+    
+      try {
+          // Create a Blob from the ArrayBuffer
+          const blob = new Blob([fileContents], { type: file.type });
+        
+          // Create an object URL from the Blob
+          const audioURL = URL.createObjectURL(blob);
+        
+          const audio = document.createElement('audio');
+          audio.src = audioURL;
+        
+          audioPlayer.innerHTML = '';
+          audioPlayer.appendChild(audio);
+          audio.play();
+      } catch (error) {
+          console.error('Error creating object URL:', error);
+      }
+  });
+
+  // Function to read file content as ArrayBuffer
+  function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(file);
+      });
+  }
 	
   </script>
 </body>
